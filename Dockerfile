@@ -17,23 +17,11 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
-# Install common Python packages (fallback for older distros without --break-system-packages)
+# Install common Python packages
 RUN pip3 install --break-system-packages --no-cache-dir \
-    requests \
-    beautifulsoup4 \
-    pandas \
-    numpy \
-    lxml \
-    pillow \
-    python-dotenv \
+    requests beautifulsoup4 pandas numpy lxml pillow python-dotenv \
     || pip3 install --no-cache-dir \
-    requests \
-    beautifulsoup4 \
-    pandas \
-    numpy \
-    lxml \
-    pillow \
-    python-dotenv
+    requests beautifulsoup4 pandas numpy lxml pillow python-dotenv
 
 # Create the startup script
 RUN cat > /start-headed.sh << 'EOF'
@@ -53,16 +41,31 @@ chromium --no-sandbox --disable-gpu --disable-dev-shm-usage \
   --user-data-dir=/data/.openclaw/browser/openclaw/user-data \
   --no-first-run --no-default-browser-check \
   --window-size=1920,1080 \
+  --disable-features=MediaRouter \
+  --disable-component-extensions-with-background-pages \
+  --disable-background-networking \
   about:blank &
 sleep 3
 
 echo "--- Configuring OpenClaw browser (attachOnly mode) ---"
 CONFIG_FILE="/data/.openclaw/openclaw.json"
 if [ -f "$CONFIG_FILE" ]; then
-    jq '.browser.attachOnly = true | .browser.profiles.openclaw.cdpUrl = "http://127.0.0.1:18800"' "$CONFIG_FILE" > /tmp/openclaw.json.tmp && mv /tmp/openclaw.json.tmp "$CONFIG_FILE"
+    jq '.browser.attachOnly = true | .browser.profiles.openclaw.cdpUrl = "http://127.0.0.1:18800" | .browser.profiles.openclaw.color = "#FF4500"' "$CONFIG_FILE" > /tmp/openclaw.json.tmp && mv /tmp/openclaw.json.tmp "$CONFIG_FILE"
 else
     mkdir -p /data/.openclaw
-    echo '{"browser":{"attachOnly":true,"profiles":{"openclaw":{"cdpUrl":"http://127.0.0.1:18800"}}}}' > "$CONFIG_FILE"
+    cat > "$CONFIG_FILE" << 'CONFEOF'
+{
+  "browser": {
+    "attachOnly": true,
+    "profiles": {
+      "openclaw": {
+        "cdpUrl": "http://127.0.0.1:18800",
+        "color": "#FF4500"
+      }
+    }
+  }
+}
+CONFEOF
 fi
 
 echo "--- Starting OpenClaw Gateway ---"
