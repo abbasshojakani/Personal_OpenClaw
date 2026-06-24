@@ -1,0 +1,39 @@
+services:
+  openclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - AUTH_USERNAME=${AUTH_USERNAME}
+      - AUTH_PASSWORD=${AUTH_PASSWORD}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - XAI_API_KEY=${XAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - PORT=8080
+      - OPENCLAW_GATEWAY_PORT=18789
+      - OPENCLAW_GATEWAY_BIND=lan
+      - OPENCLAW_STATE_DIR=/data/.openclaw
+      - OPENCLAW_WORKSPACE_DIR=/data/workspace
+      # Browser settings for Xvfb (Headed)
+      - BROWSER_ENABLED=true
+      - BROWSER_HEADLESS=false
+      - BROWSER_DEFAULT_PROFILE=openclaw
+      - BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
+      - BROWSER_EVALUATE_ENABLED=true
+      - BROWSER_SNAPSHOT_MODE=efficient
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    volumes:
+      - "openclaw-data:/data"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  openclaw-data:
