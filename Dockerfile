@@ -33,6 +33,14 @@ Xvfb :99 -screen 0 1920x1080x24 -ac -nolisten tcp &
 export DISPLAY=:99
 sleep 2
 
+echo "--- Cleaning up stale Chromium locks ---"
+# Kill any leftover Chromium processes and remove lock files from previous runs
+pkill -9 -f chromium || true
+rm -f /data/.openclaw/browser/openclaw/user-data/SingletonLock
+rm -f /data/.openclaw/browser/openclaw/user-data/SingletonSocket
+rm -f /data/.openclaw/browser/openclaw/user-data/SingletonCookie
+sleep 1
+
 echo "--- Starting Chromium with remote CDP ---"
 mkdir -p /data/.openclaw/browser/openclaw/user-data
 chromium --no-sandbox --disable-gpu --disable-dev-shm-usage \
