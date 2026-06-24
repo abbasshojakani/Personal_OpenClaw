@@ -28,13 +28,17 @@ RUN cat > /start-headed.sh << 'EOF'
 #!/bin/bash
 set -e
 
+echo "--- Cleaning up stale Xvfb locks ---"
+rm -f /tmp/.X99-lock
+pkill -9 -f Xvfb || true
+sleep 1
+
 echo "--- Starting Virtual Display (Xvfb) ---"
 Xvfb :99 -screen 0 1920x1080x24 -ac -nolisten tcp &
 export DISPLAY=:99
 sleep 2
 
 echo "--- Cleaning up stale Chromium locks ---"
-# Kill any leftover Chromium processes and remove lock files from previous runs
 pkill -9 -f chromium || true
 rm -f /data/.openclaw/browser/openclaw/user-data/SingletonLock
 rm -f /data/.openclaw/browser/openclaw/user-data/SingletonSocket
@@ -57,24 +61,36 @@ sleep 3
 
 echo "--- Configuring OpenClaw browser (attachOnly mode) ---"
 CONFIG_FILE="/data/.openclaw/openclaw.json"
-if [ -f "$CONFIG_FILE" ]; then
-    jq '.browser.attachOnly = true | .browser.profiles.openclaw.cdpUrl = "http://127.0.0.1:18800" | .browser.profiles.openclaw.color = "#FF4500"' "$CONFIG_FILE" > /tmp/openclaw.json.tmp && mv /tmp/openclaw.json.tmp "$CONFIG_FILE"
-else
-    mkdir -p /data/.openclaw
-    cat > "$CONFIG_FILE" << 'CONFEOF'
+mkdir -p /data/.openclaw
+
+# Create/overwrite browser config with correct keys ONLY
+cat > "$CONFIG_FILE" << 'CONFEOF'
 {
   "browser": {
+    "enabled": true,
     "attachOnly": true,
+    "headless": false,
+    "noSandbox": true,
+    "defaultProfile": "openclaw",
+    "executablePath": "/usr/bin/chromium",
+    "cdpUrl": "http://127.0.0.1:18800",
     "profiles": {
       "openclaw": {
+        "cdpPort": 18800,
         "cdpUrl": "http://127.0.0.1:18800",
         "color": "#FF4500"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "sandbox": {
+        "mode": "off"
       }
     }
   }
 }
 CONFEOF
-fi
 
 echo "--- Starting OpenClaw Gateway ---"
 exec openclaw gateway --bind lan
