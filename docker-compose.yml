@@ -16,7 +16,7 @@ services:
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
       - PORT=18789
       - OPENCLAW_GATEWAY_PORT=18789
-      - OPENCLAW_GATEWAY_BIND=0.0.0.0
+      - OPENCLAW_GATEWAY_BIND=lan
       - OPENCLAW_STATE_DIR=/data/.openclaw
       - OPENCLAW_WORKSPACE_DIR=/data/workspace
       # Browser settings for Xvfb (Headed)
