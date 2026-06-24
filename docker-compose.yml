@@ -19,13 +19,14 @@ services:
       - OPENCLAW_GATEWAY_BIND=lan
       - OPENCLAW_STATE_DIR=/data/.openclaw
       - OPENCLAW_WORKSPACE_DIR=/data/workspace
-      # Browser settings for Xvfb (Headed)
+      # Browser settings
       - BROWSER_ENABLED=true
       - BROWSER_HEADLESS=false
       - BROWSER_DEFAULT_PROFILE=openclaw
       - BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
       - BROWSER_EVALUATE_ENABLED=true
       - BROWSER_SNAPSHOT_MODE=efficient
+      # Telegram
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     volumes:
       - "openclaw-data:/data"
