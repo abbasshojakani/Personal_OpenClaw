@@ -59,13 +59,37 @@ chromium --no-sandbox --disable-gpu --disable-dev-shm-usage \
   about:blank &
 sleep 3
 
-echo "--- Configuring OpenClaw browser (attachOnly mode) ---"
+echo "--- Patching OpenClaw browser config (preserving existing settings) ---"
 CONFIG_FILE="/data/.openclaw/openclaw.json"
 mkdir -p /data/.openclaw
 
-# Create/overwrite browser config with correct keys ONLY
-cat > "$CONFIG_FILE" << 'CONFEOF'
+if [ -f "$CONFIG_FILE" ]; then
+    # Patch existing config with jq, preserving everything else
+    jq '
+      .browser.enabled = true |
+      .browser.attachOnly = true |
+      .browser.headless = false |
+      .browser.noSandbox = true |
+      .browser.defaultProfile = "openclaw" |
+      .browser.executablePath = "/usr/bin/chromium" |
+      .browser.cdpUrl = "http://127.0.0.1:18800" |
+      .browser.profiles.openclaw = {
+        "cdpPort": 18800,
+        "cdpUrl": "http://127.0.0.1:18800",
+        "color": "#FF4500"
+      } |
+      .agents.defaults.sandbox.mode = "off" |
+      .gateway.mode = "local"
+    ' "$CONFIG_FILE" > /tmp/openclaw.json.tmp && mv /tmp/openclaw.json.tmp "$CONFIG_FILE"
+else
+    # Create minimal config if none exists
+    cat > "$CONFIG_FILE" << 'CONFEOF'
 {
+  "gateway": {
+    "mode": "local",
+    "port": 18789,
+    "bind": "lan"
+  },
   "browser": {
     "enabled": true,
     "attachOnly": true,
@@ -91,6 +115,7 @@ cat > "$CONFIG_FILE" << 'CONFEOF'
   }
 }
 CONFEOF
+fi
 
 echo "--- Starting OpenClaw Gateway ---"
 exec openclaw gateway --bind lan
